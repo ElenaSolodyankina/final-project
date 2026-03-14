@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -9,8 +10,6 @@ import (
 	"final-project/pkg/db"
 	"final-project/pkg/logic"
 )
-
-const dateFormat = "20060102"
 
 type TasksResp struct {
 	Tasks []*db.Task `json:"tasks"`
@@ -21,12 +20,20 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "failed to fetch tasks"})
+
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": "failed to fetch tasks"}); err != nil { // ✅ Ошибка обрабатывается
+			log.Printf("[ERROR] Failed to encode response: %v", err)
+			return
+		}
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	json.NewEncoder(w).Encode(TasksResp{Tasks: tasks})
+
+	if err := json.NewEncoder(w).Encode(TasksResp{Tasks: tasks}); err != nil {
+		log.Printf("[ERROR] Failed to encode response: %v", err)
+		return
+	}
 }
 
 func getTaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -35,7 +42,11 @@ func getTaskHandler(w http.ResponseWriter, r *http.Request) {
 	if id == "" {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "id is required"})
+
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": "id is required"}); err != nil {
+			log.Printf("[ERROR] Failed to encode response: %v", err)
+			return
+		}
 		return
 	}
 
@@ -43,12 +54,20 @@ func getTaskHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "task not found"})
+
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": "task not found"}); err != nil {
+			log.Printf("[ERROR] Failed to encode response: %v", err)
+			return
+		}
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	json.NewEncoder(w).Encode(task)
+
+	if err := json.NewEncoder(w).Encode(task); err != nil {
+		log.Printf("[ERROR] Failed to encode response: %v", err)
+		return
+	}
 }
 
 func addTaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -57,21 +76,33 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "invalid JSON format"})
+
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": "invalid JSON format"}); err != nil {
+			log.Printf("[ERROR] Failed to encode response: %v", err)
+			return
+		}
 		return
 	}
 
 	if task.Title == "" {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "title is required"})
+
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": "title is required"}); err != nil {
+			log.Printf("[ERROR] Failed to encode response: %v", err)
+			return
+		}
 		return
 	}
 
 	if err := checkDate(&task); err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}); err != nil {
+			log.Printf("[ERROR] Failed to encode response: %v", err)
+			return
+		}
 		return
 	}
 
@@ -79,12 +110,20 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "failed to save task"})
+
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": "failed to save task"}); err != nil {
+			log.Printf("[ERROR] Failed to encode response: %v", err)
+			return
+		}
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	json.NewEncoder(w).Encode(map[string]string{"id": strconv.FormatInt(id, 10)})
+
+	if err := json.NewEncoder(w).Encode(map[string]string{"id": strconv.FormatInt(id, 10)}); err != nil {
+		log.Printf("[ERROR] Failed to encode response: %v", err)
+		return
+	}
 }
 
 func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -93,28 +132,44 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "invalid JSON format"})
+
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": "invalid JSON format"}); err != nil {
+			log.Printf("[ERROR] Failed to encode response: %v", err)
+			return
+		}
 		return
 	}
 
 	if task.ID == "" {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "id is required"})
+
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": "id is required"}); err != nil {
+			log.Printf("[ERROR] Failed to encode response: %v", err)
+			return
+		}
 		return
 	}
 
 	if task.Title == "" {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "title is required"})
+
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": "title is required"}); err != nil {
+			log.Printf("[ERROR] Failed to encode response: %v", err)
+			return
+		}
 		return
 	}
 
 	if err := checkDate(&task); err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}); err != nil {
+			log.Printf("[ERROR] Failed to encode response: %v", err)
+			return
+		}
 		return
 	}
 
@@ -122,12 +177,20 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "task not found"})
+
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": "task not found"}); err != nil {
+			log.Printf("[ERROR] Failed to encode response: %v", err)
+			return
+		}
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	json.NewEncoder(w).Encode(map[string]string{})
+
+	if err := json.NewEncoder(w).Encode(map[string]string{}); err != nil {
+		log.Printf("[ERROR] Failed to encode response: %v", err)
+		return
+	}
 }
 
 func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -136,7 +199,11 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	if id == "" {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "id is required"})
+
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": "id is required"}); err != nil {
+			log.Printf("[ERROR] Failed to encode response: %v", err)
+			return
+		}
 		return
 	}
 
@@ -144,12 +211,20 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "task not found"})
+
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": "task not found"}); err != nil {
+			log.Printf("[ERROR] Failed to encode response: %v", err)
+			return
+		}
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	json.NewEncoder(w).Encode(map[string]string{})
+
+	if err := json.NewEncoder(w).Encode(map[string]string{}); err != nil {
+		log.Printf("[ERROR] Failed to encode response: %v", err)
+		return
+	}
 }
 
 func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -158,7 +233,11 @@ func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
 	if id == "" {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "id is required"})
+
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": "id is required"}); err != nil {
+			log.Printf("[ERROR] Failed to encode response: %v", err)
+			return
+		}
 		return
 	}
 
@@ -166,7 +245,11 @@ func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "task not found"})
+
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": "task not found"}); err != nil {
+			log.Printf("[ERROR] Failed to encode response: %v", err)
+			return
+		}
 		return
 	}
 
@@ -175,7 +258,11 @@ func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(map[string]string{"error": "task not found"})
+
+			if err := json.NewEncoder(w).Encode(map[string]string{"error": "task not found"}); err != nil {
+				log.Printf("[ERROR] Failed to encode response: %v", err)
+				return
+			}
 			return
 		}
 	} else {
@@ -183,7 +270,11 @@ func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+
+			if err := json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}); err != nil {
+				log.Printf("[ERROR] Failed to encode response: %v", err)
+				return
+			}
 			return
 		}
 
@@ -191,31 +282,39 @@ func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(map[string]string{"error": "task not found"})
+
+			if err := json.NewEncoder(w).Encode(map[string]string{"error": "task not found"}); err != nil {
+				log.Printf("[ERROR] Failed to encode response: %v", err)
+				return
+			}
 			return
 		}
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	json.NewEncoder(w).Encode(map[string]string{})
+
+	if err := json.NewEncoder(w).Encode(map[string]string{}); err != nil {
+		log.Printf("[ERROR] Failed to encode response: %v", err)
+		return
+	}
 }
 
 func checkDate(task *db.Task) error {
 	now := time.Now()
 
 	if task.Date == "" {
-		task.Date = now.Format(dateFormat)
+		task.Date = now.Format(logic.DateFormat)
 		return nil
 	}
 
-	parsedDate, err := time.Parse(dateFormat, task.Date)
+	parsedDate, err := time.Parse(logic.DateFormat, task.Date)
 	if err != nil {
 		return err
 	}
 
 	if afterNow(now, parsedDate) {
 		if task.Repeat == "" {
-			task.Date = now.Format(dateFormat)
+			task.Date = now.Format(logic.DateFormat)
 		} else {
 			next, err := logic.NextDate(now, task.Date, task.Repeat)
 

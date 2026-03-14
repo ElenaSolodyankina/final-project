@@ -1,13 +1,20 @@
 package api
 
 import (
-	"final-project/pkg/logic"
 	"fmt"
 	"net/http"
 	"time"
+
+	"final-project/pkg/logic"
 )
 
 func nextDayHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	nowStr := r.FormValue("now")
 	dateStr := r.FormValue("date")
 	repeat := r.FormValue("repeat")
@@ -19,7 +26,7 @@ func nextDayHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		var err error
 
-		now, err = time.Parse(dateFormat, nowStr)
+		now, err = time.Parse(logic.DateFormat, nowStr)
 		if err != nil {
 			http.Error(w, "invalid now format", http.StatusBadRequest)
 			return

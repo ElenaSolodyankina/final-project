@@ -1,16 +1,19 @@
 package main
 
 import (
-	"final-project/pkg/api"
-	"final-project/pkg/db"
 	"log"
 	"net/http"
+
+	"final-project/pkg/api"
+	"final-project/pkg/db"
 )
 
 func main() {
 	if err := db.Init("scheduler.db"); err != nil {
 		log.Fatalf("[ERROR] Database init error: %v", err)
 	}
+
+	defer db.DB.Close()
 
 	api.Init()
 

@@ -601,8 +601,8 @@ label {
     opacity: .5;
 }
 
-.form-check-input:disabled~.form-check-label,
-.form-check-input[disabled]~.form-check-label {
+.form-check-input:disabled ~ .form-check-label,
+.form-check-input[disabled] ~ .form-check-label {
     cursor: default;
     opacity: .5;
 }

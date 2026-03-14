@@ -8,7 +8,9 @@ import (
 	"time"
 )
 
-var ErrNoRepeat = errors.New("No repeat rule")
+const DateFormat = "20060102"
+
+var ErrNoRepeat = errors.New("no repeat rule")
 
 func afterNow(date, now time.Time) bool {
 	dateOnly := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
@@ -22,7 +24,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		return "", ErrNoRepeat
 	}
 
-	date, err := time.Parse("20060102", dstart)
+	date, err := time.Parse(DateFormat, dstart)
 	if err != nil {
 		return "", fmt.Errorf("Invalid date format: %w", err)
 	}
@@ -37,7 +39,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	switch rule {
 	case "y":
 		if len(parts) != 1 {
-			return "", fmt.Errorf("Invalid rule")
+			return "", fmt.Errorf("invalid rule")
 		}
 
 		for {
@@ -49,16 +51,16 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 	case "d":
 		if len(parts) != 2 {
-			return "", fmt.Errorf("Invalid repeat rule")
+			return "", fmt.Errorf("invalid repeat rule")
 		}
 
 		interval, err := strconv.Atoi(parts[1])
 		if err != nil {
-			return "", fmt.Errorf("Invalid interval value")
+			return "", fmt.Errorf("invalid interval value")
 		}
 
 		if interval <= 0 || interval >= 400 {
-			return "", fmt.Errorf("Interval must be between 0 and 400")
+			return "", fmt.Errorf("interval must be between 0 and 400")
 		}
 
 		for {
@@ -69,8 +71,8 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		}
 
 	default:
-		return "", fmt.Errorf("Invalid repeat rule")
+		return "", fmt.Errorf("invalid repeat rule")
 	}
 
-	return date.Format("20060102"), nil
+	return date.Format(DateFormat), nil
 }
